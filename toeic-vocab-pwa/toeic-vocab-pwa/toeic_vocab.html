@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>多益核心單字 — 記憶卡</title>
+
+<!-- PWA: 讓網站可以加到手機主畫面、全螢幕顯示 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2d5fa6">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- iOS 專用設定 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TOEIC單字">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #f8f7f4;
+    --surface: #ffffff;
+    --border: #e4e2dc;
+    --border-soft: #eeede9;
+    --text: #1a1a18;
+    --text-muted: #6b6a65;
+    --text-hint: #9e9d98;
+    --accent: #2d5fa6;
+    --accent-bg: #edf2fb;
+    --accent-text: #1a3d6e;
+    --warn-bg: #fff8ed;
+    --warn-border: #f0c060;
+    --warn-text: #7a4f00;
+    --success-bg: #edfaf3;
+    --success-text: #0f5c33;
+    --tag-bg: #f0efeb;
+    --tag-text: #4a4944;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Layout */
+  .app { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .logo { font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+  .logo span { color: var(--accent); }
+  .day-badge { font-size: 12px; background: var(--accent-bg); color: var(--accent-text); padding: 4px 12px; border-radius: 99px; font-weight: 500; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--border-soft); border-radius: 99px; padding: 3px; width: fit-content; }
+  .tab { font-size: 13px; font-weight: 500; padding: 6px 18px; border-radius: 99px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; transition: all .15s; }
+  .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+  /* Progress */
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .pbar { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .pbar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s ease; }
+  .prog-label { font-size: 12px; color: var(--text-hint); min-width: 48px; text-align: right; }
+
+  /* Word dots */
+  .dot-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 18px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); cursor: pointer; transition: background .15s; }
+  .dot.done { background: #93c4a0; }
+  .dot.active { background: var(--accent); transform: scale(1.3); }
+
+  /* Card */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
+  .word-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .word { font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
+  .pos-pill { font-size: 11px; padding: 3px 10px; border-radius: 99px; background: var(--tag-bg); color: var(--tag-text); font-weight: 500; margin-top: 6px; white-space: nowrap; }
+  .phonetic { font-size: 14px; color: var(--text-muted); margin-bottom: 14px; }
+  .meaning { font-size: 19px; font-weight: 600; color: var(--text); margin-bottom: 18px; line-height: 1.4; }
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 8px; margin-top: 16px; }
+  .col-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .col-pill { font-size: 12px; padding: 4px 11px; border-radius: 99px; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); }
+  .context-box { background: var(--bg); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+  .memory-box { border-left: 3px solid var(--accent); padding: 10px 14px; background: var(--accent-bg); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 13px; color: var(--accent-text); line-height: 1.7; }
+  .confuse-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .confuse-pill { font-size: 12px; padding: 4px 11px; border-radius: 99px; background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text); }
+  .example { font-size: 13px; line-height: 1.8; color: var(--text-muted); padding: 8px 0; border-bottom: 1px solid var(--border-soft); }
+  .example:last-child { border-bottom: none; }
+  .example em { color: var(--accent); font-style: normal; font-weight: 600; }
+
+  /* Nav buttons */
+  .nav-row { display: flex; align-items: center; justify-content: space-between; }
+  .nav-btn { font-size: 13px; font-weight: 500; padding: 8px 20px; border-radius: 99px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; transition: all .15s; }
+  .nav-btn:hover { background: var(--bg); border-color: var(--text-muted); }
+  .nav-btn:disabled { opacity: .35; cursor: default; }
+  .done-btn { font-size: 12px; padding: 6px 14px; border-radius: 99px; border: 1px solid #93c4a0; background: var(--success-bg); color: var(--success-text); cursor: pointer; }
+  .done-btn.marked { background: #93c4a0; color: #0f3d20; }
+
+  /* Quiz */
+  .quiz-filters { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-btn { font-size: 12px; padding: 4px 12px; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; }
+  .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .quiz-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 10px; }
+  .quiz-meta { font-size: 11px; color: var(--text-hint); margin-bottom: 6px; display: flex; gap: 8px; }
+  .quiz-word { font-size: 13px; font-weight: 700; color: var(--accent); }
+  .quiz-q { font-size: 14px; font-weight: 500; line-height: 1.6; margin-bottom: 10px; }
+  .reveal-btn { font-size: 12px; padding: 5px 14px; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; }
+  .answer-box { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-soft); font-size: 13px; color: var(--text-muted); line-height: 1.7; display: none; }
+  .answer-box.show { display: block; }
+  .answer-box strong { color: var(--success-text); }
+
+  /* Stats bar */
+  .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+  .stat-num { font-size: 22px; font-weight: 700; }
+  .stat-label { font-size: 11px; color: var(--text-hint); margin-top: 2px; }
+
+  /* Search */
+  .search-wrap { position: relative; margin-bottom: 14px; }
+  .search-wrap input { width: 100%; padding: 9px 14px 9px 36px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); font-size: 13px; color: var(--text); outline: none; }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-hint); font-size: 15px; }
+
+  .pane { display: none; }
+  .pane.active { display: block; }
+
+  @media (max-width: 480px) {
+    .word { font-size: 22px; }
+    .meaning { font-size: 16px; }
+    .stats-bar { grid-template-columns: repeat(3,1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">TOEIC <span>單字卡</span></div>
+    <div class="day-badge" id="day-badge">Day 1 — 第 1–20 個</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('vocab',this)">單字學習</button>
+    <button class="tab" onclick="switchTab('quiz',this)">複習測驗</button>
+    <button class="tab" onclick="switchTab('list',this)">單字列表</button>
+  </div>
+
+  <!-- VOCAB PANE -->
+  <div class="pane active" id="pane-vocab">
+    <div class="progress-row">
+      <div class="pbar"><div class="pbar-fill" id="pbar"></div></div>
+      <div class="prog-label" id="prog-label">1 / 20</div>
+    </div>
+    <div class="dot-row" id="dot-row"></div>
+    <div id="card-area"></div>
+    <div class="nav-row">
+      <button class="nav-btn" id="btn-prev" onclick="move(-1)">← 上一個</button>
+      <button class="done-btn" id="btn-done" onclick="toggleDone()">記住了</button>
+      <button class="nav-btn" id="btn-next" onclick="move(1)">下一個 →</button>
+    </div>
+  </div>
+
+  <!-- QUIZ PANE -->
+  <div class="pane" id="pane-quiz">
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-num" id="st-total">60</div><div class="stat-label">題目總數</div></div>
+      <div class="stat"><div class="stat-num" id="st-done">0</div><div class="stat-label">已作答</div></div>
+      <div class="stat"><div class="stat-num" id="st-left">60</div><div class="stat-label">待複習</div></div>
+    </div>
+    <div class="quiz-filters">
+      <button class="filter-btn active" onclick="setFilter('all',this)">全部</button>
+      <button class="filter-btn" onclick="setFilter('day1',this)">第 1 天</button>
+      <button class="filter-btn" onclick="setFilter('day3',this)">第 3 天</button>
+      <button class="filter-btn" onclick="setFilter('day7',this)">第 7 天</button>
+    </div>
+    <div id="quiz-area"></div>
+  </div>
+
+  <!-- LIST PANE -->
+  <div class="pane" id="pane-list">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="搜尋單字或中文意思…" oninput="filterList(this.value)">
+    </div>
+    <div id="list-area"></div>
+  </div>
+</div>
+
+<script>
+const words = [
+  {
+    word:"allocate", phonetic:"/ˈæləkeɪt/", pos:"動詞",
+    meaning:"分配、撥出（資源、預算、時間）",
+    collocations:["allocate budget","allocate resources","allocate time","allocate funds"],
+    context:"公司在討論預算或人力分配時最常出現。例如主管說「我們需要把更多資源分配到行銷部門」。",
+    memory:"allo（all 全部）+ locate（定位）→ 把所有東西定位到對的地方 = 分配",
+    confuse:["distribute（廣泛散發）","assign（指定給個人）"],
+    examples:[
+      "We need to <em>allocate</em> more funds to the R&D department this quarter.",
+      "The manager <em>allocated</em> three hours for the team meeting.",
+      "The budget was <em>allocated</em> across five different projects."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"We need to ___ more resources to customer support.\" 填入正確動詞。",a:"allocate。句意：我們需要分配更多資源給客服部門。"},
+      {day:"第 3 天",q:"allocate、distribute、assign 三者有何不同？請用中文說明。",a:"allocate = 撥出預算/資源給某部門；distribute = 廣泛散發給多人；assign = 指定任務給特定個人。"},
+      {day:"第 7 天",q:"翻譯：「董事會決定將 20% 預算撥給新產品開發。」",a:"The board decided to allocate 20% of the budget to new product development."}
+    ]
+  },
+  {
+    word:"initiative", phonetic:"/ɪˈnɪʃətɪv/", pos:"名詞",
+    meaning:"主動性；新方案、新計畫",
+    collocations:["take the initiative","launch an initiative","strategic initiative","on one's own initiative"],
+    context:"面試或績效評估常見：「她總是主動提出解決方案。」也指公司推動的新專案計畫。",
+    memory:"initial（開始）+ ive → 主動跨出第一步的精神 = 主動性",
+    confuse:["motivation（動機）","incentive（獎勵誘因）"],
+    examples:[
+      "She took the <em>initiative</em> to reorganize the filing system.",
+      "The company launched a new sustainability <em>initiative</em> last month.",
+      "Employees are encouraged to act on their own <em>initiative</em>."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"She always takes the ___ to solve problems.\" 填入正確名詞。",a:"initiative。take the initiative = 主動出擊。"},
+      {day:"第 3 天",q:"initiative 作為「主動性」和「新計畫」時，各舉一個例句情境。",a:"主動性：He showed great initiative. 新計畫：We launched a cost-cutting initiative."},
+      {day:"第 7 天",q:"翻譯：「這項永續發展計畫是由執行長親自發起的。」",a:"The sustainability initiative was launched by the CEO personally."}
+    ]
+  },
+  {
+    word:"comply", phonetic:"/kəmˈplaɪ/", pos:"動詞",
+    meaning:"遵守、符合（規定、法規）",
+    collocations:["comply with regulations","comply with guidelines","comply with requirements","failure to comply"],
+    context:"法律、合規場合必備詞。\"All vendors must comply with our safety standards.\"",
+    memory:"com（一起）+ ply（折疊/順從）→ 跟著規定一起彎折 = 遵守",
+    confuse:["conform（符合標準/風格）","adhere to（堅守原則）"],
+    examples:[
+      "All suppliers must <em>comply</em> with our environmental regulations.",
+      "Failure to <em>comply</em> may result in contract termination.",
+      "The new policy requires all staff to <em>comply</em> with data protection rules."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"All employees must ___ with the company's code of conduct.\" 填入正確動詞。",a:"comply。comply with = 遵守…（固定搭配，不可省略 with）。"},
+      {day:"第 3 天",q:"comply with / conform to / adhere to 三者語氣有何差異？",a:"comply with 較正式，常用於法規；conform to 著重在符合標準或規範；adhere to 語氣最強，強調堅守原則。"},
+      {day:"第 7 天",q:"翻譯：「未能遵守這些安全規定可能導致罰款。」",a:"Failure to comply with these safety regulations may result in a fine."}
+    ]
+  },
+  {
+    word:"streamline", phonetic:"/ˈstriːmlaɪn/", pos:"動詞",
+    meaning:"精簡流程、提升效率",
+    collocations:["streamline operations","streamline processes","streamline workflow","streamline procedures"],
+    context:"商業報告、管理會議常見。公司在談論提效降本時幾乎必用此字。",
+    memory:"stream（水流）+ line → 讓工作像河流般順暢流動 = 精簡流程",
+    confuse:["simplify（簡化，著重去除複雜性）","optimize（最佳化，著重效果最大化）"],
+    examples:[
+      "We need to <em>streamline</em> our approval process to save time.",
+      "The new software helped <em>streamline</em> inventory management.",
+      "The merger was intended to <em>streamline</em> operations across both companies."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"The goal is to ___ our supply chain and reduce costs.\" 填入正確動詞。",a:"streamline。意指精簡供應鏈流程以降低成本。"},
+      {day:"第 3 天",q:"streamline 和 simplify 有何不同？",a:"streamline 著重讓流程更順暢有效率（速度感）；simplify 著重去除複雜性（結構感）。"},
+      {day:"第 7 天",q:"翻譯：「公司引進新系統以精簡採購流程。」",a:"The company introduced a new system to streamline the procurement process."}
+    ]
+  },
+  {
+    word:"negotiate", phonetic:"/nɪˈɡoʊʃieɪt/", pos:"動詞",
+    meaning:"協商、談判",
+    collocations:["negotiate a contract","negotiate terms","negotiate a deal","negotiate a price"],
+    context:"採購、業務、法律部門日常詞彙。多益閱讀題和對話題均高頻出現。",
+    memory:"neg（否定）+ otiate（去工作）→ 雙方都不直接接受，要來回談 = 協商",
+    confuse:["discuss（一般討論，無對立含意）","mediate（第三方調解）"],
+    examples:[
+      "Our team spent two weeks <em>negotiating</em> the contract terms.",
+      "She was able to <em>negotiate</em> a 15% discount with the supplier.",
+      "Both parties agreed to <em>negotiate</em> the delivery schedule."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"We will ___ the terms of the agreement next week.\" 填入正確動詞。",a:"negotiate。negotiate the terms = 協商條款（固定搭配）。"},
+      {day:"第 3 天",q:"negotiate 後面通常接什麼名詞？請列出三個常見搭配。",a:"negotiate a contract / negotiate terms / negotiate a deal / negotiate a price。"},
+      {day:"第 7 天",q:"翻譯：「業務代表成功與供應商談判出更優惠的付款條件。」",a:"The sales representative successfully negotiated better payment terms with the supplier."}
+    ]
+  },
+  {
+    word:"revenue", phonetic:"/ˈrevənjuː/", pos:"名詞",
+    meaning:"營收、收入（公司整體進帳）",
+    collocations:["generate revenue","total revenue","revenue growth","revenue stream","annual revenue"],
+    context:"財務報告、季度會議核心詞。與 profit（利潤）是多益最常測試的混淆組。",
+    memory:"re（回來）+ venue（來的地方）→ 錢回流進來的地方 = 營收",
+    confuse:["profit（扣除成本後的利潤）","income（個人或公司所得）","turnover（英式，總營業額）"],
+    examples:[
+      "The company's annual <em>revenue</em> increased by 12% last year.",
+      "This new product line is expected to generate significant <em>revenue</em>.",
+      "A drop in <em>revenue</em> forced the company to cut staff."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"The firm reported a 20% increase in annual ___.\" 填入正確名詞。",a:"revenue。annual revenue = 年營收，是財務報告常見搭配。"},
+      {day:"第 3 天",q:"revenue、profit、income 三者的差異是什麼？",a:"revenue = 賣出產品/服務的總進帳（未扣成本）；profit = 扣掉所有成本後的利潤；income = 較廣義，可指個人或公司的所得。"},
+      {day:"第 7 天",q:"翻譯：「公司預計今年第四季營收將達到破紀錄的高點。」",a:"The company expects its revenue to reach a record high in Q4 this year."}
+    ]
+  },
+  {
+    word:"subsequent", phonetic:"/ˈsʌbsɪkwənt/", pos:"形容詞",
+    meaning:"隨後的、之後發生的",
+    collocations:["subsequent meeting","subsequent analysis","subsequent steps","in subsequent months"],
+    context:"商務報告、會議紀錄常見，用來指「接下來的步驟」或「後續的討論」。",
+    memory:"sub（在下面）+ sequent（順序）→ 排在順序下面的 = 隨後的",
+    confuse:["following（較口語，同義）","consequent（因果關係造成的結果）"],
+    examples:[
+      "The initial meeting was held in March, with <em>subsequent</em> discussions in April.",
+      "Any <em>subsequent</em> changes to the contract must be approved in writing.",
+      "The pilot program was successful, leading to a <em>subsequent</em> nationwide rollout."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"The first draft was submitted in May; ___ revisions were made in June.\" 填入正確形容詞。",a:"subsequent。意指五月提交初稿，六月進行後續修改。"},
+      {day:"第 3 天",q:"subsequent 和 consequent 有何不同？",a:"subsequent 僅指時間上的先後順序（之後）；consequent 強調因果關係（因此而導致的）。"},
+      {day:"第 7 天",q:"翻譯：「初次會議後，後續的談判持續了三個月。」",a:"After the initial meeting, subsequent negotiations lasted for three months."}
+    ]
+  },
+  {
+    word:"reimburse", phonetic:"/ˌriːɪmˈbɜːrs/", pos:"動詞",
+    meaning:"報銷、退還費用給某人",
+    collocations:["reimburse expenses","reimburse costs","reimburse employees","be fully reimbursed"],
+    context:"HR、出差報銷場景必備詞。\"Please submit your receipts to be reimbursed.\"",
+    memory:"re（再次）+ im（進入）+ burse（錢包）→ 把錢再放回你的錢包 = 報銷退款",
+    confuse:["refund（退給消費者的錢）","compensate（賠償損失）"],
+    examples:[
+      "Employees will be <em>reimbursed</em> for all travel-related expenses.",
+      "Please keep your receipts so we can <em>reimburse</em> you promptly.",
+      "The company <em>reimbursed</em> her for the conference registration fee."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"Submit your receipts within 30 days to be ___.\" 填入正確動詞形式。",a:"reimbursed（被動式）。意指 30 天內提交收據以獲得報銷。"},
+      {day:"第 3 天",q:"reimburse 和 refund 使用情境有何不同？",a:"reimburse 是公司退還員工墊付的費用（出差/報銷）；refund 是商家退還消費者付款（退貨/取消訂單）。"},
+      {day:"第 7 天",q:"翻譯：「所有出差費用將在提交報告後兩週內報銷。」",a:"All travel expenses will be reimbursed within two weeks of submitting the report."}
+    ]
+  },
+  {
+    word:"postpone", phonetic:"/poʊstˈpoʊn/", pos:"動詞",
+    meaning:"延後、推遲（有明確改期意圖）",
+    collocations:["postpone a meeting","postpone the deadline","postpone until","be postponed due to"],
+    context:"商務郵件最高頻詞之一。改期通知幾乎必用此字。與 cancel 是多益常測混淆組。",
+    memory:"post（之後）+ pone（放）→ 把它放到之後 = 延後",
+    confuse:["cancel（取消，不再舉辦）","delay（延誤，通常非自願）","adjourn（正式會議休會）"],
+    examples:[
+      "The board meeting has been <em>postponed</em> until next Thursday.",
+      "We had to <em>postpone</em> the product launch due to supply issues.",
+      "Could we <em>postpone</em> our call to tomorrow afternoon?"
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"The conference has been ___ due to bad weather.\" 填入正確動詞形式。",a:"postponed（被動式）。注意：postpone 暗示有新的時間，與 cancel 不同。"},
+      {day:"第 3 天",q:"postpone / cancel / delay 三者使用情境的關鍵差異？",a:"postpone = 主動延後到另一時間；cancel = 完全取消；delay = 被動延誤（通常有外力因素，且不一定有新時間）。"},
+      {day:"第 7 天",q:"翻譯：「由於主講人臨時有事，研討會已延後至下週五舉行。」",a:"The seminar has been postponed to next Friday due to the speaker's unexpected commitment."}
+    ]
+  },
+  {
+    word:"oversee", phonetic:"/ˌoʊvərˈsiː/", pos:"動詞",
+    meaning:"監督、統籌管理",
+    collocations:["oversee operations","oversee a project","oversee staff","oversee the implementation"],
+    context:"職位描述（Job Description）核心詞。\"The director will oversee all marketing activities.\"",
+    memory:"over（在上方）+ see（看）→ 從上方俯看全局 = 監督統籌",
+    confuse:["supervise（較直接地監督個人工作）","monitor（持續追蹤數據/進度）","manage（廣義管理）"],
+    examples:[
+      "She was hired to <em>oversee</em> the company's expansion into Asia.",
+      "The project manager will <em>oversee</em> all phases of the construction.",
+      "He <em>oversees</em> a team of 30 engineers across three offices."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"The VP will ___ the merger process and report directly to the CEO.\" 填入正確動詞。",a:"oversee。意指副總裁將統籌監督整個合併過程。"},
+      {day:"第 3 天",q:"oversee、supervise、monitor 三者的層級與語氣差異？",a:"oversee = 高層統籌全局，策略性；supervise = 較直接地看管個人或小組工作；monitor = 持續追蹤指標數據，較技術性。"},
+      {day:"第 7 天",q:"翻譯：「她負責監督整個亞太區的業務拓展計畫。」",a:"She is responsible for overseeing the business expansion plan across the Asia-Pacific region."}
+    ]
+  },
+  {
+    word:"facilitate", phonetic:"/fəˈsɪlɪteɪt/", pos:"動詞",
+    meaning:"促進、使（事情）更容易發生",
+    collocations:["facilitate communication","facilitate a meeting","facilitate growth","facilitate the process"],
+    context:"商務會議、專案管理常見。\"The new platform facilitates collaboration across teams.\"",
+    memory:"facil（容易，如 easy）+ itate → 讓事情變容易 = 促進",
+    confuse:["enable（使能夠做到）","support（支援、協助）"],
+    examples:[
+      "The software is designed to <em>facilitate</em> communication between departments.",
+      "She was asked to <em>facilitate</em> the workshop next Friday.",
+      "Better infrastructure would <em>facilitate</em> trade in the region."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"The new platform will ___ collaboration across all teams.\" 填入正確動詞。",a:"facilitate。意指新平台將促進跨團隊協作。"},
+      {day:"第 3 天",q:"facilitate 和 enable 有何語意上的差異？",a:"facilitate = 讓過程更順暢（降低阻力）；enable = 讓原本不可能的事變得可能（賦予能力）。"},
+      {day:"第 7 天",q:"翻譯：「這份協議旨在促進兩國之間的貿易往來。」",a:"This agreement is designed to facilitate trade between the two countries."}
+    ]
+  },
+  {
+    word:"procurement", phonetic:"/prəˈkjʊərmənt/", pos:"名詞",
+    meaning:"採購（流程）",
+    collocations:["procurement process","procurement department","procurement officer","procurement cost"],
+    context:"製造業、企業採購部門的核心詞。多益物流與供應鏈主題必考。",
+    memory:"pro（向前）+ cure（取得/照顧）→ 主動向前取得所需物品 = 採購",
+    confuse:["purchasing（較口語，同義）","acquisition（也指企業併購）"],
+    examples:[
+      "The <em>procurement</em> department is responsible for sourcing all raw materials.",
+      "We need to improve our <em>procurement</em> process to reduce costs.",
+      "She has ten years of experience in supply chain and <em>procurement</em>."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"Our ___ team is reviewing bids from three different vendors.\" 填入正確名詞。",a:"procurement。procurement team = 採購團隊。"},
+      {day:"第 3 天",q:"procurement 和 purchasing 在商務語境中有何差異？",a:"兩者意思相近，但 procurement 更正式、範圍更廣，涵蓋策略選廠、議價、合約管理；purchasing 多指實際下單購買的動作。"},
+      {day:"第 7 天",q:"翻譯：「採購部門正在評估新的供應商以降低原物料成本。」",a:"The procurement department is evaluating new suppliers to reduce raw material costs."}
+    ]
+  },
+  {
+    word:"liability", phonetic:"/ˌlaɪəˈbɪlɪti/", pos:"名詞",
+    meaning:"法律責任；負債",
+    collocations:["legal liability","limited liability","assume liability","liability insurance","current liabilities"],
+    context:"法律和財務報表雙重高頻詞。多益財務題和法律題的核心詞彙。",
+    memory:"liable（有責任的）+ ity → 需要承擔的責任或債務 = 負債/責任",
+    confuse:["responsibility（廣義的責任感）","debt（具體的債務金額）"],
+    examples:[
+      "The company denied any <em>liability</em> for the accident.",
+      "Limited <em>liability</em> protects shareholders from personal financial loss.",
+      "Current <em>liabilities</em> include accounts payable and short-term loans."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"The firm has limited ___ which means investors risk only their initial investment.\" 填入正確名詞。",a:"liability。limited liability = 有限責任。"},
+      {day:"第 3 天",q:"liability 在法律語境和財務報表中各指什麼？",a:"法律語境：法律上須承擔的責任（如賠償義務）；財務報表：公司的負債（對應 assets 資產）。"},
+      {day:"第 7 天",q:"翻譯：「公司否認對此次工廠事故負有法律責任。」",a:"The company denied any legal liability for the factory accident."}
+    ]
+  },
+  {
+    word:"delegate", phonetic:"/ˈdelɪɡeɪt/", pos:"動詞／名詞",
+    meaning:"（動）授權委派；（名）代表、委派者",
+    collocations:["delegate tasks","delegate authority","delegate responsibility","a conference delegate"],
+    context:"管理層常用詞。主管在討論工作分配時必用。名詞指大會的代表人。",
+    memory:"de（向下）+ legate（派遣）→ 向下派任務 = 授權委派",
+    confuse:["assign（直接分配任務，較無授權含意）","appoint（正式任命職位）"],
+    examples:[
+      "Good managers know how to <em>delegate</em> tasks effectively.",
+      "She <em>delegated</em> the report writing to her assistant.",
+      "Over 500 <em>delegates</em> attended the annual conference."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"A good leader should ___ tasks rather than trying to do everything alone.\" 填入正確動詞。",a:"delegate。意指好的領導者應該學會授權，而非事必躬親。"},
+      {day:"第 3 天",q:"delegate 作動詞和名詞時，各舉一個例句情境。",a:"動詞：She delegated the project to her team. 名詞：The delegates voted on the new policy."},
+      {day:"第 7 天",q:"翻譯：「執行長將日常營運決策授權給各部門主管。」",a:"The CEO delegated day-to-day operational decisions to the department heads."}
+    ]
+  },
+  {
+    word:"inventory", phonetic:"/ˈɪnvəntɔːri/", pos:"名詞",
+    meaning:"庫存、存貨清單",
+    collocations:["manage inventory","inventory control","inventory level","inventory management","take inventory"],
+    context:"零售、物流、製造業核心詞。多益聽力題常出現倉儲管理情境。",
+    memory:"invent（找出）+ ory → 把找出來的東西都列清單 = 庫存清單",
+    confuse:["stock（較口語，英式英語常用）","warehouse（倉庫，存放庫存的地方）"],
+    examples:[
+      "We need to conduct a full <em>inventory</em> check before the year ends.",
+      "The system automatically updates <em>inventory</em> levels after each sale.",
+      "Low <em>inventory</em> levels could affect our ability to fulfill orders."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"The warehouse team will ___ inventory at the end of the month.\" 填入正確動詞片語。",a:"take inventory（盤點庫存）或 conduct an inventory check。"},
+      {day:"第 3 天",q:"inventory 和 stock 在商務英文中的使用差異？",a:"兩者常可互換，但 inventory 較正式、多用於書面報告和美式英語；stock 較口語，英式英語更常用（如 out of stock = 缺貨）。"},
+      {day:"第 7 天",q:"翻譯：「我們的庫存管理系統可即時追蹤所有商品的數量。」",a:"Our inventory management system can track the quantity of all products in real time."}
+    ]
+  },
+  {
+    word:"benchmark", phonetic:"/ˈbentʃmɑːrk/", pos:"名詞／動詞",
+    meaning:"基準、標竿；以…為基準評量",
+    collocations:["industry benchmark","set a benchmark","benchmark performance","benchmark against competitors"],
+    context:"績效評估、市場分析常見。\"Our results exceeded the industry benchmark.\"",
+    memory:"bench（工作台）+ mark（標記）→ 在工作台上刻下的標準刻度 = 基準",
+    confuse:["standard（標準，較廣義）","target（目標值，向前看）"],
+    examples:[
+      "Our customer satisfaction score exceeded the industry <em>benchmark</em>.",
+      "The company uses competitors' pricing as a <em>benchmark</em>.",
+      "We need to <em>benchmark</em> our performance against leading firms."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"Our delivery time is well above the industry ___.\" 填入正確名詞。",a:"benchmark。industry benchmark = 產業基準值。"},
+      {day:"第 3 天",q:"benchmark 和 target 在商務語境中有何本質差異？",a:"benchmark = 現有業界基準（用來比較現況）；target = 設定的未來目標值（用來努力達成）。方向不同。"},
+      {day:"第 7 天",q:"翻譯：「我們每季都會把自家的表現與同業標竿公司進行比較。」",a:"We benchmark our performance against industry leaders every quarter."}
+    ]
+  },
+  {
+    word:"expedite", phonetic:"/ˈekspɪdaɪt/", pos:"動詞",
+    meaning:"加速處理、加急辦理",
+    collocations:["expedite a shipment","expedite the process","expedite delivery","expedite an order"],
+    context:"物流、客服、採購常見請求用語。\"Could you expedite this order? It's urgent.\"",
+    memory:"ex（出）+ ped（腳）+ ite → 讓腳快快跑出去 = 加速辦理",
+    confuse:["accelerate（加速，較廣義）","rush（口語，催促）","prioritize（優先處理）"],
+    examples:[
+      "We need to <em>expedite</em> the shipment to meet the client's deadline.",
+      "Can you <em>expedite</em> the approval process for this contract?",
+      "The manager agreed to <em>expedite</em> the refund for the customer."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"Please ___ this order as the client needs it by Friday.\" 填入正確動詞。",a:"expedite。意指請加急處理這筆訂單，因客戶週五就需要。"},
+      {day:"第 3 天",q:"expedite 和 prioritize 的差異？",a:"expedite 強調加快速度，縮短完成時間；prioritize 強調調整優先順序，不一定會加快速度。"},
+      {day:"第 7 天",q:"翻譯：「由於工廠延誤，我們請物流公司加急安排貨物出運。」",a:"Due to the factory delay, we asked the logistics company to expedite the shipment."}
+    ]
+  },
+  {
+    word:"correspondence", phonetic:"/ˌkɒrəˈspɒndəns/", pos:"名詞",
+    meaning:"往來書信、通訊（正式書面）",
+    collocations:["business correspondence","email correspondence","official correspondence","handle correspondence"],
+    context:"正式商務寫作場合常見。指一系列往來的電子郵件或信件，而非單一訊息。",
+    memory:"correspond（互相回應）+ ence → 雙方互相回應的文件 = 往來書信",
+    confuse:["communication（廣義溝通，包含口說）","correspondence（特指書面往來）"],
+    examples:[
+      "Please keep all <em>correspondence</em> with the client on file.",
+      "The legal team reviewed the <em>correspondence</em> before the meeting.",
+      "We maintain written <em>correspondence</em> with all our overseas partners."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"All ___ with the client should be forwarded to the legal department.\" 填入正確名詞。",a:"correspondence。意指所有與客戶的往來書信都應轉發給法務部門。"},
+      {day:"第 3 天",q:"correspondence 和 communication 在正式商務英文中的使用差異？",a:"correspondence 特指書面往來（信件、Email）；communication 更廣義，包含口說、會議、即時訊息等所有溝通形式。"},
+      {day:"第 7 天",q:"翻譯：「請保存所有與供應商的書面往來紀錄，以備日後查驗。」",a:"Please keep all written correspondence with the supplier for future reference."}
+    ]
+  },
+  {
+    word:"incentive", phonetic:"/ɪnˈsentɪv/", pos:"名詞",
+    meaning:"誘因、激勵措施",
+    collocations:["financial incentive","tax incentive","provide incentives","performance incentive","sales incentive"],
+    context:"HR 薪酬制度、政府政策、業務激勵方案均常見。",
+    memory:"in（進入）+ cent（分，錢）+ ive → 讓錢進來的動力 = 誘因",
+    confuse:["motivation（內在動機）","bonus（獎金，incentive 的一種）","initiative（主動性）"],
+    examples:[
+      "The company offers financial <em>incentives</em> to employees who meet their targets.",
+      "Tax <em>incentives</em> have attracted many foreign investors to the region.",
+      "What <em>incentives</em> does your company offer for high performers?"
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"The government introduced tax ___ to encourage investment in green energy.\" 填入正確名詞。",a:"incentives（複數）。tax incentives = 稅務優惠/誘因。"},
+      {day:"第 3 天",q:"incentive 和 motivation 有何不同？",a:"incentive = 外部給予的誘因（獎金、優惠）；motivation = 個人內在的動力（成就感、熱情）。"},
+      {day:"第 7 天",q:"翻譯：「公司推出業績獎勵方案，達成目標的業務員可獲得額外獎金。」",a:"The company launched a performance incentive program; sales staff who meet targets will receive additional bonuses."}
+    ]
+  },
+  {
+    word:"implement", phonetic:"/ˈɪmplɪment/", pos:"動詞",
+    meaning:"執行、落實（計畫、政策）",
+    collocations:["implement a strategy","implement a policy","implement changes","implement a system","fully implemented"],
+    context:"商業計畫、政府政策推動最核心的動詞之一。多益閱讀測驗中出現頻率極高。",
+    memory:"im（進入）+ plement（填滿）→ 把計畫填進現實 = 執行落實",
+    confuse:["execute（執行，較強調過程）","apply（應用，範圍較廣）","enforce（強制執行，帶強制力）"],
+    examples:[
+      "The company plans to <em>implement</em> a new HR system next quarter.",
+      "It took six months to fully <em>implement</em> the new safety procedures.",
+      "The government decided to <em>implement</em> stricter environmental regulations."
+    ],
+    quiz:[
+      {day:"第 1 天",q:"\"The board approved the plan, and it will be ___ starting next month.\" 填入正確動詞形式。",a:"implemented（被動式）。意指董事會核准計畫，下個月起開始執行。"},
+      {day:"第 3 天",q:"implement、execute、enforce 三者的語意差異？",a:"implement = 將計畫付諸實行（政策/系統）；execute = 強調執行過程和技術（較廣）；enforce = 強制別人遵守規定（帶有權威性）。"},
+      {day:"第 7 天",q:"翻譯：「新的績效評估制度將於下一個財政年度開始全面落實。」",a:"The new performance evaluation system will be fully implemented at the start of the next fiscal year."}
+    ]
+  }
+];
+
+let cur = 0;
+let done = new Set();
+let quizFilter = 'all';
+let revealedQuiz = new Set();
+
+function renderDots() {
+  document.getElementById('dot-row').innerHTML = words.map((_, i) =>
+    `<div class="dot${i===cur?' active':''} ${done.has(i)?'done':''}" onclick="goTo(${i})" title="${words[i].word}"></div>`
+  ).join('');
+}
+
+function renderCard() {
+  const w = words[cur];
+  const total = words.length;
+  document.getElementById('pbar').style.width = ((cur+1)/total*100)+'%';
+  document.getElementById('prog-label').textContent = `${cur+1} / ${total}`;
+  document.getElementById('btn-prev').disabled = cur === 0;
+  document.getElementById('btn-next').disabled = cur === total-1;
+  const doneBtn = document.getElementById('btn-done');
+  doneBtn.textContent = done.has(cur) ? '已記住 ✓' : '記住了';
+  doneBtn.className = 'done-btn' + (done.has(cur) ? ' marked' : '');
+
+  document.getElementById('card-area').innerHTML = `
+    <div class="card">
+      <div class="word-header">
+        <div>
+          <div class="word">${w.word}</div>
+          <div class="phonetic">${w.phonetic}</div>
+        </div>
+        <span class="pos-pill">${w.pos}</span>
+      </div>
+      <div class="meaning">${w.meaning}</div>
+      <div class="section-label">常見搭配詞</div>
+      <div class="col-row">${w.collocations.map(c=>`<span class="col-pill">${c}</span>`).join('')}</div>
+      <div class="section-label">母語人士使用情境</div>
+      <div class="context-box">${w.context}</div>
+      <div class="section-label">記憶聯想法</div>
+      <div class="memory-box">${w.memory}</div>
+      <div class="section-label">容易混淆的字</div>
+      <div class="confuse-row">${w.confuse.map(c=>`<span class="confuse-pill">${c}</span>`).join('')}</div>
+      <div class="section-label">例句</div>
+      ${w.examples.map(e=>`<div class="example">${e}</div>`).join('')}
+    </div>
+  `;
+  renderDots();
+}
+
+function move(dir) {
+  cur = Math.max(0, Math.min(words.length-1, cur+dir));
+  renderCard();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function goTo(i) { cur = i; renderCard(); }
+function toggleDone() {
+  if (done.has(cur)) done.delete(cur); else done.add(cur);
+  renderCard();
+  updateStats();
+}
+
+function updateStats() {
+  const total = words.length * 3;
+  const revealed = revealedQuiz.size;
+  document.getElementById('st-total').textContent = total;
+  document.getElementById('st-done').textContent = revealed;
+  document.getElementById('st-left').textContent = total - revealed;
+}
+
+function setFilter(f, btn) {
+  quizFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderQuiz();
+}
+
+function renderQuiz() {
+  const dayMap = {'day1':'第 1 天','day3':'第 3 天','day7':'第 7 天'};
+  let html = '';
+  words.forEach((w, wi) => {
+    w.quiz.forEach((q, qi) => {
+      if (quizFilter !== 'all' && q.day !== dayMap[quizFilter]) return;
+      const key = `${wi}-${qi}`;
+      html += `<div class="quiz-card">
+        <div class="quiz-meta">
+          <span class="quiz-word">${w.word}</span>
+          <span>${q.day}</span>
+        </div>
+        <div class="quiz-q">${q.q}</div>
+        <button class="reveal-btn" onclick="revealAnswer('${key}')">查看答案</button>
+        <div class="answer-box${revealedQuiz.has(key)?' show':''}" id="ans-${key}">
+          <strong>答：</strong>${q.a}
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('quiz-area').innerHTML = html || '<p style="color:var(--text-hint);font-size:13px;padding:12px 0;">此篩選條件無題目。</p>';
+}
+
+function revealAnswer(key) {
+  revealedQuiz.add(key);
+  const el = document.getElementById('ans-'+key);
+  if (el) el.classList.add('show');
+  updateStats();
+}
+
+function renderList() {
+  document.getElementById('list-area').innerHTML = words.map((w,i) => `
+    <div class="quiz-card" style="cursor:pointer" onclick="goToVocab(${i})">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <span style="font-size:16px;font-weight:600;color:var(--accent)">${w.word}</span>
+          <span class="pos-pill" style="margin-left:8px">${w.pos}</span>
+          ${done.has(i)?'<span style="font-size:11px;color:var(--success-text);margin-left:8px">✓ 已記住</span>':''}
+        </div>
+        <span style="font-size:11px;color:var(--text-hint)">${w.phonetic}</span>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:5px">${w.meaning}</div>
+    </div>
+  `).join('');
+}
+
+function filterList(q) {
+  const kw = q.toLowerCase();
+  document.querySelectorAll('#list-area .quiz-card').forEach((el, i) => {
+    const w = words[i];
+    const match = w.word.toLowerCase().includes(kw) || w.meaning.includes(kw);
+    el.style.display = match ? '' : 'none';
+  });
+}
+
+function goToVocab(i) {
+  cur = i;
+  switchTab('vocab', document.querySelector('.tab'));
+  renderCard();
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelector(`button[onclick*="${name}"]`).classList.add('active');
+  document.getElementById('pane-'+name).classList.add('active');
+  if (name === 'quiz') { renderQuiz(); updateStats(); }
+  if (name === 'list') renderList();
+}
+
+renderCard();
+updateStats();
+
+// PWA: 註冊 service worker，啟用離線快取
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
